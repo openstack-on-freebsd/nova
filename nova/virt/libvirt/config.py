@@ -1550,6 +1550,7 @@ class LibvirtConfigGuestDiskEncryptionSecret(LibvirtConfigObject):
 class LibvirtConfigGuestDiskEncryption(LibvirtConfigObject):
     """https://libvirt.org/formatstorageencryption.html
     """
+
     def __init__(self, **kwargs):
         super(LibvirtConfigGuestDiskEncryption, self).__init__(**kwargs)
         self.format = None
@@ -2317,12 +2318,20 @@ class LibvirtConfigGuestChar(LibvirtConfigGuestCharBase):
     def __init__(self, **kwargs):
         super(LibvirtConfigGuestChar, self).__init__(**kwargs)
 
+        self.source_master = None
+        self.source_slave = None
         self.target_port = None
         self.target_type = None
 
     def format_dom(self):
         dev = super(LibvirtConfigGuestChar, self).format_dom()
-
+        if self.source_master is not None or self.source_slave is not None:
+            source = etree.Element("source")
+            if self.source_master is not None:
+                source.set("master", self.source_master)
+            if self.source_slave is not None:
+                source.set("slave", self.source_slave)
+            dev.append(source)
         if self.target_port is not None or self.target_type is not None:
             target = etree.Element("target")
             if self.target_port is not None:

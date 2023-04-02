@@ -242,7 +242,7 @@ def get_disk_bus_for_device_type(instance,
         return disk_bus
 
     # Otherwise pick a hypervisor default disk bus
-    if virt_type in ("qemu", "kvm"):
+    if virt_type in ("qemu", "kvm", "bhyve"):
         if device_type == "cdrom":
             guestarch = libvirt_utils.get_arch(image_meta)
             if guestarch in (

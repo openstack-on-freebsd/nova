@@ -121,6 +121,9 @@ def extend(image, size):
     if not can_resize_image(image.path, size):
         return
 
+    if CONF.libvirt.virt_type == 'bhyve':
+        return
+
     if (image.format == imgmodel.FORMAT_PLOOP):
         nova.privsep.libvirt.ploop_resize(image.path, size)
         return

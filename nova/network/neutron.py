@@ -3233,7 +3233,7 @@ class API:
             devname=devname,
             active=vif_active,
             preserve_on_delete=preserve_on_delete,
-            delegate_create=True,
+            delegate_create=False,
         )
 
     def _log_error_if_vnic_type_changed(

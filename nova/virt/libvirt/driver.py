@@ -196,6 +196,7 @@ def patch_tpool_proxy():
     or __repr__() calls. See bug #962840 for details.
     We perform a monkey patch to replace those two instance methods.
     """
+
     def str_method(self):
         return str(self._obj)
 
@@ -1723,7 +1724,7 @@ class LibvirtDriver(driver.ComputeDriver):
         # Set maximum attempt as 5, most test can remove the directory
         # for the second time.
         attempts = 0
-        while(os.path.exists(target) and attempts < 5):
+        while (os.path.exists(target) and attempts < 5):
             shutil.rmtree(target, ignore_errors=True)
             if os.path.exists(target):
                 time.sleep(random.randint(20, 200) / 100.0)
@@ -3954,7 +3955,6 @@ class LibvirtDriver(driver.ComputeDriver):
                           accel_info)
 
     def trigger_crash_dump(self, instance):
-
         """Trigger crash dump by injecting an NMI to the specified instance."""
         try:
             self._host.get_guest(instance).inject_nmi()
@@ -5891,6 +5891,9 @@ class LibvirtDriver(driver.ComputeDriver):
             guest.features.append(vconfig.LibvirtConfigGuestFeatureACPI())
             if not CONF.workarounds.libvirt_disable_apic:
                 guest.features.append(vconfig.LibvirtConfigGuestFeatureAPIC())
+        elif CONF.libvirt.virt_type == 'bhyve':
+            guest.features.append(vconfig.LibvirtConfigGuestFeatureACPI())
+            guest.features.append(vconfig.LibvirtConfigGuestFeatureAPIC())
 
         if CONF.libvirt.virt_type in ('qemu', 'kvm') and os_type == 'windows':
             hv = vconfig.LibvirtConfigGuestFeatureHyperV()
@@ -6369,6 +6372,9 @@ class LibvirtDriver(driver.ComputeDriver):
             self._create_pty_device(
                 guest_cfg, vconfig.LibvirtConfigGuestConsole,
                 log_path=log_path)
+        elif CONF.libvirt.virt_type == 'bhyve':
+            self._create_nmdm_device(
+                guest_cfg, vconfig.LibvirtConfigGuestSerial)
         else:  # qemu, kvm
             if self._is_s390x_guest(image_meta):
                 self._create_consoles_s390x(
@@ -6425,6 +6431,14 @@ class LibvirtDriver(driver.ComputeDriver):
         consolepty.log = log
 
         guest_cfg.add_device(consolepty)
+
+    def _create_nmdm_device(self, guest_cfg, char_dev_cls):
+        consolenmdm = char_dev_cls()
+        consolenmdm.type = "nmdm"
+        consolenmdm.source_master = "/dev/nmdm0A"
+        consolenmdm.source_slave = "/dev/nmdm0B"
+
+        guest_cfg.add_device(consolenmdm)
 
     def _serial_ports_already_defined(self, instance):
         try:
@@ -6546,6 +6560,8 @@ class LibvirtDriver(driver.ComputeDriver):
         here explicitly so that we can _disable_ it (by setting the model to
         'none') if it's not necessary.
         """
+        if CONF.libvirt.virt_type == 'bhyve':
+            return
         usbhost = vconfig.LibvirtConfigGuestUSBHostController()
         usbhost.index = 0
         # an unset model means autodetect, while 'none' means don't add a
