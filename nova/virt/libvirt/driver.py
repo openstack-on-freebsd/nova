@@ -426,7 +426,9 @@ class LibvirtDriver(driver.ComputeDriver):
         }
         super(LibvirtDriver, self).__init__(virtapi)
 
-        if not sys.platform.startswith('linux'):
+        # HACK(starbops): Make it works on FreeBSD platforms
+        if (not sys.platform.startswith('linux') and
+            not sys.platform.startswith('freebsd')):
             raise exception.InternalError(
                 _('The libvirt driver only works on Linux'))
 

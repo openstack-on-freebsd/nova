@@ -1166,7 +1166,8 @@ class Host(object):
 
     @staticmethod
     def _get_avail_memory_kb():
-        with open('/proc/meminfo') as fp:
+        # HACK(starbops): replace with FreeBSD specific path
+        with open('/compat/linux/proc/meminfo') as fp:
             m = fp.read().split()
         idx1 = m.index('MemFree:')
         idx2 = m.index('Buffers:')
@@ -1514,10 +1515,8 @@ class Host(object):
 
         # we don't use '/capabilities/host/cpu/topology' since libvirt doesn't
         # guarantee the accuracy of this information
-        for cell in self.get_capabilities().host.topology.cells:
-            if any(len(cpu.siblings) > 1 for cpu in cell.cpus if cpu.siblings):
-                self._has_hyperthreading = True
-                break
+        # HACK(starbops): FreeBSD support
+        self._has_hyperthreading = False
 
         return self._has_hyperthreading
 
