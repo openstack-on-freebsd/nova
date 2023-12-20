@@ -6374,7 +6374,10 @@ class LibvirtDriver(driver.ComputeDriver):
                 log_path=log_path)
         elif CONF.libvirt.virt_type == 'bhyve':
             self._create_nmdm_device(
-                guest_cfg, vconfig.LibvirtConfigGuestSerial)
+                guest_cfg, vconfig.LibvirtConfigGuestSerial,
+                instance.id)
+            self._create_consoles_qemu_kvm(
+                guest_cfg, instance, flavor, image_meta)
         else:  # qemu, kvm
             if self._is_s390x_guest(image_meta):
                 self._create_consoles_s390x(
@@ -6432,11 +6435,11 @@ class LibvirtDriver(driver.ComputeDriver):
 
         guest_cfg.add_device(consolepty)
 
-    def _create_nmdm_device(self, guest_cfg, char_dev_cls):
+    def _create_nmdm_device(self, guest_cfg, char_dev_cls, instance_id):
         consolenmdm = char_dev_cls()
         consolenmdm.type = "nmdm"
-        consolenmdm.source_master = "/dev/nmdm0A"
-        consolenmdm.source_slave = "/dev/nmdm0B"
+        consolenmdm.source_master = "/dev/nmdm%dA" % instance_id
+        consolenmdm.source_slave = "/dev/nmdm%dB" % instance_id
 
         guest_cfg.add_device(consolenmdm)
 
