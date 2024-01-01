@@ -742,12 +742,11 @@ class Host(object):
 
         :returns: set of online CPUs, raises libvirtError on error
         """
-        cpus, cpu_map, online = self.get_connection().getCPUMap()
+        cpus = os.cpu_count()
 
         online_cpus = set()
         for cpu in range(cpus):
-            if cpu_map[cpu]:
-                online_cpus.add(cpu)
+            online_cpus.add(cpu)
 
         return online_cpus
 
